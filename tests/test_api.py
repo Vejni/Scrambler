@@ -64,3 +64,10 @@ def test_one_hot_encode():
     x = one_hot_encode(["ACGTN", "acg"], seq_len=5)
     np.testing.assert_array_equal(x[0].argmax(-1)[:4], [0, 1, 2, 3])
     assert x[0, 4].sum() == 0 and x[1, 3:].sum() == 0 and x[1, :3].sum() == 3
+
+
+def test_mask_dropout_with_length_not_divisible_by_scale():
+    from scrambler_torch.network import mask_dropout
+    torch.manual_seed(0)
+    m = mask_dropout(torch.ones(3, 1, 23), drop_scales=(1, 5), min_rate=0.5, max_rate=0.5)
+    assert m.shape == (3, 1, 23) and set(m.unique().tolist()) <= {0.0, 1.0} and 0 < m.mean() < 1

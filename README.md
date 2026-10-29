@@ -53,6 +53,15 @@ Keras scramblers trained with the original code can be loaded with
 Full example (the original Optimus 5' UTR notebook, same hyperparameters):
 `python examples/optimus5/train_optimus5.py --epochs 10` (25–50 min on 4 CPU threads, depending on load).
 
+## Credits and license
+
+MIT. This is a derivative work of [johli/scrambler](https://github.com/johli/scrambler) (© 2021 johli, MIT).
+Please cite the paper: J. Linder, A. La Fleur, Z. Chen, A. Ljubetič, D. Baker, S. Kannan, G. Seelig,
+"Interpreting neural networks for biological sequences by learning stochastic masks",
+*Nat. Mach. Intell.* 4, 41–54 (2022). The ported Optimus 5' predictor loads weights from the original repo
+(Sample et al., *Nat. Biotechnol.* 2019); example data and Keras weights are not redistributed here and are
+fetched with `reference/fetch.sh`.
+
 ## Layout
 
 ```
@@ -87,9 +96,10 @@ tests/               equivalence tests (+ fixtures), sampler properties, API smo
 **Deliberate differences:**
 - Inputs are `(N, L, C)`; the original `(N, 1, L, C)` layout is accepted too.
 - Data is not trimmed to a multiple of the batch size, and `n_classes` is inferred from the predictor output.
-- The classification `maximization`/`minimization` losses take `(y_true, y_pred)`. In the original they take
-  only `y_pred` and crash when called.
-- Mask dropout also works when `L` is not divisible by the drop scale.
+- The classification `maximization`/`minimization` losses take `(y_true, y_pred)`. In the original they are
+  defined with only `y_pred`, while the training code calls every loss with two arguments (found by reading the
+  code; we did not run them).
+- Mask dropout also works when `L` is not divisible by the drop scale (covered by a test).
 
 ## Numerical equivalence with the original
 
@@ -105,6 +115,10 @@ Four configurations cover:
 - target/margin entropy, templates, non-uniform background;
 - instance/batch norm, even and odd kernels, dilation, smoothing, mask-dropout input, zero-padding.
 
+Limits of the comparison: the random mask dropout is only exercised with drop rates of 0 (its RNG cannot match
+TF's), so it is checked for shape and behaviour but not numerically against the original. The `optimize` and
+`finetune` loops are smoke-tested end to end; only their score parametrisation is compared numerically.
+
 For each configuration the tests check:
 
 | check                                                               | tolerance                       |
@@ -117,10 +131,11 @@ For each configuration the tests check:
 | ported Optimus 5' predictor vs. Keras model                          | 1e-4                            |
 
 Things found along the way (each handled in the tests or the port):
-- **Keras 2.2.4's Adam is racy under TF1.** Parameter assignments and the `iterations` increment are in one
-  unordered update list, so backprop can read updated weights, and bias correction can use `t+1`. Replaying
-  the same step from the same state gives different trajectories. The fixtures therefore apply Keras's exact
-  Adam formula sequentially to (race-free) Keras gradients.
+- **Keras 2.2.4's compiled Adam is nondeterministic under TF1.** Replaying the same training steps from
+  identical weights and optimizer state sometimes gives different losses (e.g. 5 of 7 replays agreed). The
+  likely cause is that parameter updates and the `iterations` increment sit in one unordered TF update list,
+  but we did not verify the mechanism. The fixtures therefore apply Keras's exact Adam formula
+  (`keras/optimizers.py`) sequentially to Keras's gradients.
 - **Keras puts Adam's ε outside the bias correction.** `torch.optim.Adam` puts it inside. This changes steps
   for gradient entries around 1e-5, so the port ships `KerasAdam` and uses it by default.
 - **Inert parameters.** The resblock `conv_0` bias feeds straight into a normalization layer. Its gradient is
