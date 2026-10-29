@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scrambler-torch"
+version = "0.1.0"
+description = "PyTorch port of Scrambler networks for interpreting sequence-predictive models"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = ["torch>=2.0", "numpy", "scipy>=1.1", "h5py"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+examples = ["pandas", "matplotlib"]
+
+[tool.setuptools]
+packages = ["scrambler_torch"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore:Using padding='same' with even kernel:UserWarning"]

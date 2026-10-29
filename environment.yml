@@ -1,0 +1,15 @@
+# PyTorch env for scrambler_torch. Pick the torch wheel matching your CUDA driver, e.g.
+#   pip install torch --index-url https://download.pytorch.org/whl/cu126
+name: scrambler-torch
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - torch
+      - numpy
+      - scipy
+      - h5py
+      - pandas
+      - matplotlib
+      - pytest
+      - -e .

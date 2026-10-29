@@ -1,0 +1,15 @@
+# Original implementation (TF 1.13 / Keras 2.2.4), only needed to regenerate fixtures
+# or to run reference/train_optimus5_keras.py. CPU-only.
+name: scrambler-tf1
+dependencies:
+  - python=3.7
+  - pip
+  - pip:
+      - tensorflow==1.13.1
+      - keras==2.2.4
+      - h5py==2.10.0
+      - numpy==1.16.6
+      - scipy==1.2.1
+      - pandas==0.25.3
+      - matplotlib==3.0.3
+      - protobuf<3.21
